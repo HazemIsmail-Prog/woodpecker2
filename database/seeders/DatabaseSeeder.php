@@ -20,8 +20,15 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
+        User::factory()->create([
+            'name' => 'Mostafa',
+            'email' => 'mustafa@alhlebi.co',
+            'password' => bcrypt('Mostafa_ameen00'),
+        ]);
+
         $this->call([
             ProjectSeeder::class,
+            EmployeeSeeder::class,
         ]);
     }
 }

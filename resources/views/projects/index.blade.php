@@ -72,10 +72,12 @@
                                     <div class="flex flex-col lg:flex-row">
                                         <!-- Left Section - Enhanced -->
                                         <div class="w-full lg:w-1/3 lg:pr-6 lg:border-r border-gray-100 dark:border-gray-700 mb-4 lg:mb-0">
+                                            <template x-if="project.quotation_number">
                                             <p class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 flex">
                                                 <i class="fas fa-hashtag text-blue-400 w-5 flex-shrink-0"></i>
-                                                <span class="flex-1" x-text="project.quotation_number"></span>
-                                            </p>
+                                                    <span class="flex-1" x-text="project.quotation_number"></span>
+                                                </p>
+                                            </template>
                                             <template x-if="project.phone">
                                                 <p class="text-sm text-gray-600 dark:text-gray-300 mt-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 flex">
                                                     <i class="fas fa-phone text-green-400 w-5 flex-shrink-0"></i>
@@ -115,13 +117,23 @@
                                                     <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">Duration</p>
                                                     <p class="font-medium text-gray-800 dark:text-gray-200" x-text="project.duration ? project.duration + ' days' : '-'"></p>
                                                 </div>
+                                                <div x-show="project.schedule" class="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
+                                                    <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">Start Date</p>
+                                                    <p class="font-medium text-gray-800 dark:text-gray-200" x-text="project.schedule?.start_date ? formatDate(project.schedule.start_date) : '-'"></p>
+                                                </div>
+                                                <div x-show="project.schedule" class="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
+                                                    <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">End Date</p>
+                                                    <p class="font-medium text-gray-800 dark:text-gray-200" x-text="project.schedule?.end_date ? formatDate(project.schedule.end_date) : '-'"></p>
+                                                </div>
+                                                
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Bottom Section - Enhanced -->
                                     <div class="flex justify-between items-center pt-4 mt-4 border-t border-gray-100 dark:border-gray-700">
-                                        <span class="text-sm font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 rounded-full" x-text="formatCurrency(project.value)"></span>
+                                        <span x-show="project.value" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 rounded-full" x-text="formatCurrency(project.value)"></span>
+                                        <span x-show="!project.value" class="text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 px-3 py-1 rounded-full">No Value</span>
                                         <div class="flex space-x-2">
                                             <button @click="editProject(project)" 
                                                     class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1 rounded-md transition-all duration-200">
@@ -213,6 +225,7 @@
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Contract Date</label>
                                         <input type="date" 
                                                x-model="currentProject.contract_date"
+                                               @change="setDeliveryDate"
                                                :class="{'border-red-500': errors.contract_date}"
                                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                         <p x-show="errors.contract_date" x-text="errors.contract_date" class="mt-1 text-sm text-red-600"></p>
@@ -337,6 +350,20 @@
 
             init() {
                 this.fetchProjects();
+            },
+
+            setDeliveryDate() {
+                if (this.currentProject.contract_date) {
+                    const date = new Date(this.currentProject.contract_date);
+                    date.setDate(date.getDate() + 70);
+                    // Format the date as YYYY-MM-DD
+                    this.currentProject.delivery_date = date.toISOString().split('T')[0];
+
+                    // set installation date to 10 days from delivery date
+                    const installationDate = new Date(this.currentProject.delivery_date);
+                    installationDate.setDate(installationDate.getDate() + 10);
+                    this.currentProject.installation_date = installationDate.toISOString().split('T')[0];
+                }
             },
 
             async fetchProjects() {

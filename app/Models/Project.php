@@ -34,4 +34,9 @@ class Project extends Model
     {
         return $this->hasOne(Schedule::class);
     }
+
+    public function getStartDateAttribute()
+    {
+        return $this->schedule->start_date;
+    }
 } 

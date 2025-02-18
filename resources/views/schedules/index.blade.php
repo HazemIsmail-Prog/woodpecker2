@@ -31,9 +31,10 @@
                                     <div class="p-3 rounded cursor-move bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800"
                                         draggable="true"
                                         @dragstart="draggedProject = project">
-                                        <div class="flex justify-between">
-                                            <span x-text="project.name"></span>
-                                            <span x-text="project.duration + ' days'"></span>
+                                        <div class="flex flex-col justify-between">
+                                            <div x-text="project.name"></div>
+                                            <div x-text="getFromattedDate(project.installation_date)"></div>
+                                            <div x-text="project.duration + ' days'"></div>
                                         </div>
                                     </div>
                                 </template>
@@ -213,6 +214,14 @@
                 axios.delete('/schedules/'+id)
                 .then(response => {
                     this.fetchData();
+                });
+            },
+
+            getFromattedDate(date){
+                return new Date(date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
                 });
             },
 

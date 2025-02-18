@@ -24,6 +24,10 @@
                         class="text-gray-900 dark:text-gray-100">
                         {{ __('Schedules') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('employees.index')" :active="request()->routeIs('employees.index')"
+                        class="text-gray-900 dark:text-gray-100">
+                        {{ __('Employees') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -91,7 +95,14 @@
                 class="text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
                 {{ __('Projects') }}
             </x-responsive-nav-link>
-            
+            <x-responsive-nav-link :href="route('schedules.index')" :active="request()->routeIs('schedules.index')"
+                class="text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                {{ __('Schedules') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('employees.index')" :active="request()->routeIs('employees.index')"
+                class="text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                {{ __('Employees') }}
+            </x-responsive-nav-link>
         </div>
 
         <!-- Responsive Settings Options -->

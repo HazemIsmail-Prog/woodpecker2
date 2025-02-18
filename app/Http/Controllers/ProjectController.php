@@ -9,48 +9,14 @@ use Illuminate\Validation\ValidationException;
 class ProjectController extends Controller
 {
 
-    public function schedules(Request $request,$month = null)
-    {
-        if ($request->wantsJson()) {
-                $projects = Project::query()
-                    ->whereNotNull('duration')
-                    ->get();
-
-                    $scheduledProjects = Project::query()
-                    ->whereNotNull('start_date')
-                    ->whereNotNull('end_date')
-                    ->get() ;
-
-            return response()->json([
-                'projects' => $projects,
-                'scheduledProjects' => $scheduledProjects,
-            ]);
-        }
-
-        return view('projects.schedules');
-    }
-
-    public function setSchedule(Request $request, Project $project)
-    {
-        $project->update([
-            'row' => $request->row,
-            'color' => $request->color,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'duration' => $request->duration,
-        ]);
-        return response()->json($project);
-    }
-
     public function index(Request $request)
     {
-        $projects = Project::latest()->get();
+        $projects = Project::latest()->with('schedule')->get();
 
         // Return JSON for AJAX requests
         if ($request->wantsJson()) {
             return response()->json($projects);
         }
-
         // Return view for regular requests
         return view('projects.index', compact('projects'));
     }
@@ -60,16 +26,16 @@ class ProjectController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'contract_date' => 'required|date',
+                'contract_date' => 'nullable|date',
                 'phone' => 'nullable|string|max:20',
                 'location' => 'nullable|string|max:255',
-                'quotation_number' => 'required|string|max:255',
-                'delivery_date' => 'required|date',
+                'quotation_number' => 'nullable|string|max:255',
+                'delivery_date' => 'nullable|date',
                 'installation_date' => 'nullable|date',
                 'type_of_work' => 'nullable|string|max:255',
                 'duration' => 'nullable|integer',
                 'value' => 'nullable|numeric|min:0',
-                'status' => 'required|in:pending,in_progress,completed,cancelled'
+                'status' => 'nullable|in:pending,in_progress,completed,cancelled'
             ]);
 
             $project = Project::create($validated);
@@ -87,16 +53,16 @@ class ProjectController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'contract_date' => 'required|date',
+            'contract_date' => 'nullable|date',
             'phone' => 'nullable|string|max:20',
             'location' => 'nullable|string|max:255',
-            'quotation_number' => 'required|string|max:255',
-            'delivery_date' => 'required|date',
+            'quotation_number' => 'nullable|string|max:255',
+            'delivery_date' => 'nullable|date',
             'installation_date' => 'nullable|date',
             'type_of_work' => 'nullable|string|max:255',
             'duration' => 'nullable|integer',
             'value' => 'nullable|numeric|min:0',
-            'status' => 'required'
+            'status' => 'nullable|in:pending,in_progress,completed,cancelled'
         ]);
 
         $project->update($validated);
