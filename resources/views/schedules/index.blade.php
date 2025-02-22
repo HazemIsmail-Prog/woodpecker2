@@ -571,6 +571,8 @@
             },
 
             setScheduleToUnPlaced(schedule){
+                this.unPlacedSchedules.push(schedule);
+                this.schedules = this.schedules.filter(s => s.id !== schedule.id);
                 axios.put('/schedules/'+schedule.id, {
                     ...schedule,
                     start_date: null,
@@ -608,11 +610,26 @@
                 if(this.checkOverlap(startDate,endDate,i,this.draggedSchedule.id)){
                     return;
                 }
-                axios.put('/schedules/'+this.draggedSchedule.id, {
-                    ...this.draggedSchedule,
-                    row: i,
+
+                if(this.draggedSchedule.start_date){
+                this.schedules.find(schedule => schedule.id === this.draggedSchedule.id).row = i;
+                this.schedules.find(schedule => schedule.id === this.draggedSchedule.id).start_date = startDate.toISOString().slice(0, 10);
+                    this.schedules.find(schedule => schedule.id === this.draggedSchedule.id).end_date = endDate.toISOString().slice(0, 10);
+                }else{
+                    this.schedules.push({
+                        ...this.draggedSchedule,
+                        row: i,
+                        start_date: startDate.toISOString().slice(0, 10),
+                        end_date: endDate.toISOString().slice(0, 10),
+                    });
+                    this.unPlacedSchedules = this.unPlacedSchedules.filter(schedule => schedule.id !== this.draggedSchedule.id);
+                }
+                    axios.put('/schedules/'+this.draggedSchedule.id, {
+                        ...this.draggedSchedule,
+                        row: i,
                     start_date: startDate.toISOString().slice(0, 10),
                     end_date: endDate.toISOString().slice(0, 10),
+                    // change the schedule on frontend
                 }).then(response => {
                     this.fetchData();
                 }).catch(error => {
