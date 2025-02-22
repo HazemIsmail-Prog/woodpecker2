@@ -49,27 +49,31 @@ class DailyScheduleController extends Controller
         // Delete existing schedules for this date
         DailySchedule::where('date', $validated['date'])->delete();
 
+        $data = [];
+
         // Create new schedules
         foreach ($validated['assignments'] as $assignment) {
             if (empty($assignment['employee_ids'])) {
                 // Create schedule without employees
-                DailySchedule::create([
+                $data[] = [
                     'date' => $validated['date'],
                     'project_id' => $assignment['project_id'],
                     'employee_id' => null
-                ]);
+                ];
             } else {
                 // Create schedule for each employee
                 foreach ($assignment['employee_ids'] as $employeeId) {
-                    DailySchedule::create([
+                    $data[] = [
                         'date' => $validated['date'],
                         'project_id' => $assignment['project_id'],
                         'employee_id' => $employeeId
-                    ]);
+                    ];
                 }
             }
         }
+        // dd($data);
 
+        DailySchedule::insert($data);
         return response()->json(['message' => 'Schedule saved successfully']);
     }
 
