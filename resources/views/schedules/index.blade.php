@@ -631,9 +631,9 @@
                     end_date: endDate.toISOString().slice(0, 10),
                     // change the schedule on frontend
                 }).then(response => {
-                    this.fetchData();
+                    console.log('schedule updated');
                 }).catch(error => {
-                    console.error('Error updating schedule:', error);
+                    alert('Error updating schedule:', error);
                     this.fetchData(); // Revert on error
                 });
 

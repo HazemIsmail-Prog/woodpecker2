@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Schedule;
+use App\Rules\NoScheduleOverlap;
 use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
@@ -39,9 +40,17 @@ class ScheduleController extends Controller
 
     public function update(Request $request, Schedule $schedule)
     {
-
         $validated = $request->validate([
-            'start_date' => 'nullable|date',
+            'start_date' => [
+                'nullable',
+                'date',
+                new NoScheduleOverlap(
+                    $schedule->id,
+                    $request->row,
+                    $request->start_date,
+                    $request->end_date
+                )
+            ],
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'row' => 'nullable|integer|min:1',
             'duration' => 'required|integer|min:1',
