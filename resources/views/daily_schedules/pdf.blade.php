@@ -73,13 +73,13 @@
                         </div>
                     </td>
                     <td>
-                        {{ $schedules->where('employee.type', 'supervisor')->pluck('employee.name')->implode(', ') }}
+                        {{ $schedules->where('employee.type', 'supervisor')->pluck('employee.name')->unique()->implode(', ') ?: '-' }}
                     </td>
                     <td>
-                        {{ $schedules->where('employee.type', 'technician')->pluck('employee.name')->implode(', ') }}
+                        {{ $schedules->where('employee.type', 'technician')->pluck('employee.name')->unique()->implode(', ') ?: '-' }}
                     </td>
                     <td>
-                        {{ $schedules->where('employee.type', 'engineer')->pluck('employee.name')->implode(', ') }}
+                        {{ $schedules->where('employee.type', 'engineer')->pluck('employee.name')->unique()->implode(', ') ?: '-' }}
                     </td>
                 </tr>
             @endforeach
