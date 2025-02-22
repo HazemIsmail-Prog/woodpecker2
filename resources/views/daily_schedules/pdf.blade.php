@@ -71,8 +71,8 @@
                     <td>
                         <div class="project-name">{{ $schedules[0]->project->name }}</div>
                         <div class="project-details">
-                            Quotation: {{ $schedules[0]->project->quotation_number }}<br>
-                            Location: {{ $schedules[0]->project->location }}
+                            {{ $schedules[0]->project->quotation_number }}<br>
+                            {{ $schedules[0]->project->location }}
                         </div>
                     </td>
                     <td>
