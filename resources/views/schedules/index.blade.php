@@ -719,7 +719,7 @@
                         this.closeModal();
                     })
                     .catch(error => {
-                        console.error('Error updating schedule:', error);
+                        alert('Error updating schedule:', error);
                     });
             },
 
