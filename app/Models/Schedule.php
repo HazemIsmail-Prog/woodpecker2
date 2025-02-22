@@ -11,7 +11,10 @@ class Schedule extends Model
         'start_date',
         'end_date',
         'row',
-        'color'
+        'color',
+        'duration',
+        'notes',
+        'status',
     ];
 
     public function project()

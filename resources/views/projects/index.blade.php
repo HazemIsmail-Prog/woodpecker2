@@ -3,58 +3,148 @@
         <x-slot name="header">
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                    {{ __('Projects') }} <span class="text-sm text-gray-500 dark:text-gray-400">({{ $projects->count() }})</span>
+                    {{ __('Projects') }} <span id="total"></span>
                 </h2>
                 <div id="new"></div>
             </div>
         </x-slot>
 
         <div class="p-2">
-            <div class="max-w-7xl mx-auto">
+            <div class=" mx-auto">
                 <div class="p-2 text-gray-900 dark:text-gray-100" x-data="projects">
 
+                    <template x-teleport="#total">
+                        <span class="text-xs ms-2 text-[#ac7909]" x-text="totalRecords"></span>
+                    </template>
                     <template x-teleport="#new">
-                        <button @click="$dispatch('open-modal', 'project-modal')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        <i class="fas fa-plus mr-2"></i>Add Project
-                    </button>
-
+                                            <!-- Add this near your "Add Project" button -->
+                    <div>
+                        <button @click="$dispatch('open-modal', 'import-modal')"
+                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                            <i class="fas fa-file-import mr-2"></i>Import Projects
+                        </button>
+                            <button @click="openProjectModal()"
+                                    class="bg-[#ac7909] hover:bg-[#8e6407] text-white font-bold py-2 px-4 rounded">
+                                <i class="fas fa-plus mr-2"></i>Add Project
+                            </button>
+                    </div>
                     </template>
 
                     <!-- Search and Filters -->
-                    <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <input type="text" 
-                                   x-model="search" 
-                                   placeholder="Search projects..." 
-                                   class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                    <div class="mb-6 space-y-4">
+                        <!-- Search and Sort Controls -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Search -->
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </span>
+                                <input type="text" 
+                                       x-model="search" 
+                                       @input.debounce.500ms="resetAndFetch()"
+                                       placeholder="Search projects..." 
+                                       class="w-full pl-10 pr-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ac7909] focus:border-[#ac7909]">
+                            </div>
+
+                            <!-- Sort Field -->
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                                    <i class="fas fa-sort text-gray-400"></i>
+                                </span>
+                                <select x-model="sortBy" 
+                                        @change="resetAndFetch()"
+                                        class="w-full pl-10 pr-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ac7909] focus:border-[#ac7909] appearance-none">
+                                    <option value="name">Name</option>
+                                    <option value="quotation_number">Quotation Number</option>
+                                    <option value="type_of_work">Type of Work</option>
+                                    <option value="id">Creation Date</option>
+                                    <option value="contract_date">Contract Date</option>
+                                    <option value="delivery_date">Delivery Date</option>
+                                    <option value="installation_date">Installation Date</option>
+                                    <option value="value">Value</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-400"></i>
+                                </div>
+                            </div>
+
+                            <!-- Sort Direction -->
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                                    <i class="fas fa-arrow-up-wide-short text-gray-400"></i>
+                                </span>
+                                <select x-model="sortDirection" 
+                                        @change="resetAndFetch()"
+                                        class="w-full pl-10 pr-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ac7909] focus:border-[#ac7909] appearance-none">
+                                    <option value="asc">Ascending</option>
+                                    <option value="desc">Descending</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-400"></i>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <select x-model="statusFilter" 
-                                    class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                <option value="">All Statuses</option>
-                                <option value="pending">Pending</option>
-                                <option value="in_progress">In Progress</option>
-                                <option value="completed">Completed</option>
-                                <option value="cancelled">Cancelled</option>
-                            </select>
-                        </div>
-                        <div>
-                            <select x-model="sortBy" 
-                                    class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                <option value="delivery_date">Sort by Delivery Date</option>
-                                <option value="contract_date">Sort by Contract Date</option>
-                                <option value="value">Sort by Value</option>
-                                <option value="name">Sort by Name</option>
-                            </select>
+
+                        <!-- Filters -->
+                        <div class="flex flex-col md:flex-row md:items-center gap-4 rounded-lg ">
+                            <!-- Status Filter -->
+                            <div class="relative flex-1">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                                    <i class="fas fa-filter text-gray-400"></i>
+                                </span>
+                                <select x-model="statusFilter" 
+                                        @change="resetAndFetch()"
+                                        class="w-full pl-10 pr-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ac7909] focus:border-[#ac7909] appearance-none">
+                                    <option value="">All Statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="site_on_hold">Site On Hold</option>
+                                    <option value="site_not_ready">Site Not Ready</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-400"></i>
+                                </div>
+                            </div>
+
+                            <!-- Schedule Filter -->
+                            <div class="flex items-center gap-4 flex-wrap md:flex-nowrap">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" 
+                                           x-model="schedulesFilter" 
+                                           @change="resetAndFetch()"
+                                           value=""
+                                           class="form-radio text-[#ac7909] focus:ring-[#ac7909] border-gray-300 dark:border-gray-600">
+                                    <span class="ml-2 text-[#ac7909] dark:text-[#ac7909]">All</span>
+                                </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" 
+                                           x-model="schedulesFilter" 
+                                           @change="resetAndFetch()"
+                                           value="true"
+                                           class="form-radio text-[#ac7909] focus:ring-[#ac7909] border-gray-300 dark:border-gray-600">
+                                    <span class="ml-2 text-[#ac7909] dark:text-[#ac7909]">Scheduled</span>
+                                </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" 
+                                           x-model="schedulesFilter" 
+                                           @change="resetAndFetch()"
+                                           value="false"
+                                           class="form-radio text-[#ac7909] focus:ring-[#ac7909] border-gray-300 dark:border-gray-600">
+                                    <span class="ml-2 text-[#ac7909] dark:text-[#ac7909]">Not Scheduled</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Projects Table -->
                     <div class="space-y-4">
-                        <template x-for="project in filteredProjects" :key="project.id">
+                        <template x-for="project in projects" :key="project.id">
+                            <!-- Project Card -->
                             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-100 dark:border-gray-700">
                                 <!-- Top Section - Enhanced -->
-                                <div class="p-4 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700">
+                                <div class="p-4 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-[#ac7909]/10 to-[#8e6407]/10 dark:from-[#ac7909]/20 dark:to-[#8e6407]/20">
                                     <div class="flex justify-between items-center">
                                         <h3 class="text-lg font-semibold text-gray-800 dark:text-white hover:text-blue-600 transition-colors duration-200" x-text="project.name"></h3>
                                         <span :class="{
@@ -67,15 +157,18 @@
                                     </div>
                                 </div>
 
+                                
                                 <div class="p-4">
                                     <!-- Main Content Section -->
                                     <div class="flex flex-col lg:flex-row">
                                         <!-- Left Section - Enhanced -->
                                         <div class="w-full lg:w-1/3 lg:pr-6 lg:border-r border-gray-100 dark:border-gray-700 mb-4 lg:mb-0">
                                             <template x-if="project.quotation_number">
-                                            <p class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 flex">
-                                                <i class="fas fa-hashtag text-blue-400 w-5 flex-shrink-0"></i>
-                                                    <span class="flex-1" x-text="project.quotation_number"></span>
+                                                <p 
+                                                
+                                                class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 flex">
+                                                    <i class="fas fa-hashtag text-blue-400 w-5 flex-shrink-0"></i>
+                                                    <span :class="{'bg-[#ac7909] text-white px-2 py-1 rounded-md dark:bg-[#8e6407]':project.quotation_number === search}" x-text="project.quotation_number"></span>
                                                 </p>
                                             </template>
                                             <template x-if="project.phone">
@@ -100,7 +193,7 @@
 
                                         <!-- Right Section - Enhanced -->
                                         <div class="w-full lg:w-2/3 lg:pl-6">
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                                                 <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
                                                     <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">Contract Date</p>
                                                     <p class="font-medium text-gray-800 dark:text-gray-200" x-text="formatDate(project.contract_date)"></p>
@@ -113,19 +206,48 @@
                                                     <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">Installation Date</p>
                                                     <p class="font-medium text-gray-800 dark:text-gray-200" x-text="formatDate(project.installation_date)"></p>
                                                 </div>
-                                                <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
-                                                    <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">Duration</p>
-                                                    <p class="font-medium text-gray-800 dark:text-gray-200" x-text="project.duration ? project.duration + ' days' : '-'"></p>
+                                            </div>
+                                            <!-- display project Schedules -->
+                                            <div x-show="project.schedules?.length > 0" class="mt-4">
+                                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Schedules</h3>
+                                                <div class="mt-2 overflow-x-auto">
+                                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                                        <thead class="bg-gray-50 dark:bg-gray-700">
+                                                            <tr>
+                                                                <th class="px-4 py-2 text-start text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Start Date</th>
+                                                                <th class="px-4 py-2 text-start text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">End Date</th>
+                                                                <th class="px-4 py-2 text-start text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Duration</th>
+                                                                <th class="px-4 py-2 text-start text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                                                                <th class="px-4 py-2 text-start text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Notes</th>
+                                                                <th class="px-4 py-2 text-start text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                                            <template x-for="schedule in project.schedules" :key="schedule.id">
+                                                                <tr>
+                                                                    <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200" x-text="formatDate(schedule.start_date)"></td>
+                                                                    <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200" x-text="formatDate(schedule.end_date)"></td>
+                                                                    <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200" x-text="schedule.duration + ' days'"></td>
+                                                                    <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200" x-text="schedule.status"></td>
+                                                                    <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200" x-text="schedule.notes"></td>
+                                                                    <!-- delete schedule -->    
+                                                                    <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200">
+                                                                        <button @click="deleteSchedule(schedule)" class="text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-1 rounded-md transition-all duration-200">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            </template>
+                                                        </tbody>
+                                                    </table>
                                                 </div>
-                                                <div x-show="project.schedule" class="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
-                                                    <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">Start Date</p>
-                                                    <p class="font-medium text-gray-800 dark:text-gray-200" x-text="project.schedule?.start_date ? formatDate(project.schedule.start_date) : '-'"></p>
-                                                </div>
-                                                <div x-show="project.schedule" class="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
-                                                    <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">End Date</p>
-                                                    <p class="font-medium text-gray-800 dark:text-gray-200" x-text="project.schedule?.end_date ? formatDate(project.schedule.end_date) : '-'"></p>
-                                                </div>
-                                                
+                                            </div>
+
+                                            <div class="flex justify-end mt-4">
+                                                <button @click="openScheduleModal(project)" 
+                                                        class=" text-[#8e6407] hover:bg-[#8e6407] hover:text-white text-xs py-1 px-2 rounded self-center text-center">
+                                                    <i class="fas fa-plus mr-2"></i>Add Schedule
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -135,7 +257,7 @@
                                         <span x-show="project.value" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 rounded-full" x-text="formatCurrency(project.value)"></span>
                                         <span x-show="!project.value" class="text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 px-3 py-1 rounded-full">No Value</span>
                                         <div class="flex space-x-2">
-                                            <button @click="editProject(project)" 
+                                            <button @click="openProjectModal(project)" 
                                                     class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1 rounded-md transition-all duration-200">
                                                 <i class="fas fa-edit"></i>
                                             </button>
@@ -150,187 +272,37 @@
                         </template>
                     </div>
 
-                    <!-- Project Modal -->
-                    <x-modal name="project-modal" :show="false">
-                        <div class="p-6 dark:bg-gray-800">
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100" x-text="editingProject ? 'Edit Project' : 'Add New Project'"></h2>
-                            <form @submit.prevent="saveProject" class="mt-6">
-                                <!-- Update all form dividers -->
-                                <div class="relative my-6">
-                                    <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                                        <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
-                                    </div>
-                                    <div class="relative flex justify-center">
-                                        <span class="bg-white dark:bg-gray-800 px-3 text-sm text-gray-500 dark:text-gray-400">
-                                            <i class="fas fa-info-circle mr-1"></i>Contact Details
-                                        </span>
-                                    </div>
-                                </div>
+                    <!-- Loading indicator -->
+                    <div x-show="isLoading" 
+                         class="py-4 text-center">
+                        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 dark:border-gray-100"></div>
+                    </div>
 
-                                <!-- First Row: Name and Quotation -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
-                                        <input type="text" 
-                                               x-model="currentProject.name" 
-                                               :class="{'border-red-500': errors.name}"
-                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                        <p x-show="errors.name" x-text="errors.name" class="mt-1 text-sm text-red-600"></p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quotation Number</label>
-                                        <input type="text" 
-                                               x-model="currentProject.quotation_number" 
-                                               :class="{'border-red-500': errors.quotation_number}"
-                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                        <p x-show="errors.quotation_number" x-text="errors.quotation_number" class="mt-1 text-sm text-red-600"></p>
-                                    </div>
-                                </div>
 
-                                <!-- Second Row: Phone and Location -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
-                                        <input type="tel" 
-                                               x-model="currentProject.phone"
-                                               :class="{'border-red-500': errors.phone}"
-                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                        <p x-show="errors.phone" x-text="errors.phone" class="mt-1 text-sm text-red-600"></p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
-                                        <input type="text" 
-                                               x-model="currentProject.location"
-                                               :class="{'border-red-500': errors.location}"
-                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                        <p x-show="errors.location" x-text="errors.location" class="mt-1 text-sm text-red-600"></p>
-                                    </div>
-                                </div>
-
-                                <!-- Update the Dates section divider -->
-                                <div class="relative my-6">
-                                    <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                                        <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
-                                    </div>
-                                    <div class="relative flex justify-center">
-                                        <span class="bg-white dark:bg-gray-800 px-3 text-sm text-gray-500 dark:text-gray-400">
-                                            <i class="fas fa-calendar mr-1"></i>Dates
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- Third Row: Dates -->
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Contract Date</label>
-                                        <input type="date" 
-                                               x-model="currentProject.contract_date"
-                                               @change="setDeliveryDate"
-                                               :class="{'border-red-500': errors.contract_date}"
-                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                        <p x-show="errors.contract_date" x-text="errors.contract_date" class="mt-1 text-sm text-red-600"></p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Delivery Date</label>
-                                        <input type="date" 
-                                               x-model="currentProject.delivery_date"
-                                               :class="{'border-red-500': errors.delivery_date}"
-                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                        <p x-show="errors.delivery_date" x-text="errors.delivery_date" class="mt-1 text-sm text-red-600"></p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Installation Date</label>
-                                        <input type="date" 
-                                               x-model="currentProject.installation_date"
-                                               :class="{'border-red-500': errors.installation_date}"
-                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                        <p x-show="errors.installation_date" x-text="errors.installation_date" class="mt-1 text-sm text-red-600"></p>
-                                    </div>
-                                </div>
-
-                                <!-- Update the Work Details section divider -->
-                                <div class="relative my-6">
-                                    <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                                        <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
-                                    </div>
-                                    <div class="relative flex justify-center">
-                                        <span class="bg-white dark:bg-gray-800 px-3 text-sm text-gray-500 dark:text-gray-400">
-                                            <i class="fas fa-cog mr-1"></i>Work Details
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- Fourth Row: Type of Work and Duration -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type of Work</label>
-                                        <input type="text" 
-                                               x-model="currentProject.type_of_work"
-                                               :class="{'border-red-500': errors.type_of_work}"
-                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                        <p x-show="errors.type_of_work" x-text="errors.type_of_work" class="mt-1 text-sm text-red-600"></p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration (days)</label>
-                                        <input type="number" 
-                                               x-model="currentProject.duration"
-                                               :class="{'border-red-500': errors.duration}"
-                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                        <p x-show="errors.duration" x-text="errors.duration" class="mt-1 text-sm text-red-600"></p>
-                                    </div>
-                                </div>
-
-                                <!-- Update the Status & Value section divider -->
-                                <div class="relative my-6">
-                                    <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                                        <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
-                                    </div>
-                                    <div class="relative flex justify-center">
-                                        <span class="bg-white dark:bg-gray-800 px-3 text-sm text-gray-500 dark:text-gray-400">
-                                            <i class="fas fa-chart-line mr-1"></i>Status & Value
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- Fifth Row: Value and Status -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Value (KD)</label>
-                                        <input type="number" 
-                                               x-model="currentProject.value"
-                                               step="0.01"
-                                               :class="{'border-red-500': errors.value}"
-                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                        <p x-show="errors.value" x-text="errors.value" class="mt-1 text-sm text-red-600"></p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                                        <select x-model="currentProject.status" 
-                                                :class="{'border-red-500': errors.status}"
-                                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                            <option value="pending" class="dark:bg-gray-700">Pending</option>
-                                            <option value="in_progress" class="dark:bg-gray-700">In Progress</option>
-                                            <option value="completed" class="dark:bg-gray-700">Completed</option>
-                                            <option value="cancelled" class="dark:bg-gray-700">Cancelled</option>
-                                        </select>
-                                        <p x-show="errors.status" x-text="errors.status" class="mt-1 text-sm text-red-600"></p>
-                                    </div>
-                                </div>
-
-                                <!-- Action Buttons -->
-                                <div class="mt-6 flex justify-end space-x-3">
-                                    <button type="button" @click="$dispatch('close')" 
-                                            class="bg-white dark:bg-gray-700 dark:text-gray-300 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                        Cancel
-                                    </button>
-                                    <button type="submit" 
-                                            class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700">
-                                        Save
-                                    </button>
-                                </div>
-                            </form>
+                    <template x-if="hasMorePages && !isLoading">
+                        <!-- Load more button -->
+                        <div x-cloak x-intersect="loadMore" 
+                             class="py-12 text-center">
+                            <button @click="loadMore"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-[#ac7909] hover:bg-[#8e6407] rounded-md shadow-sm">
+                                Load More
+                            </button>
                         </div>
-                    </x-modal>
+                    </template>
+
+
+                    <!-- add scroll to top button -->
+                    <button x-cloak x-transition @click="scrollToTop" x-show="isScrolled"
+                            class="fixed bottom-4 right-4 bg-[#ac7909] text-white px-4 py-3.5 rounded-full shadow-lg hover:bg-[#8e6407] transition-colors duration-200">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+
+
+                    @include('projects.project-form-modal')
+                    @include('projects.schedule-form-modal')
+                    @include('projects.import-modal')
+
+
                 </div>
             </div>
         </div>
@@ -345,10 +317,60 @@
             editingProject: false,
             search: '',
             statusFilter: '',
-            sortBy: 'delivery_date',
+            schedulesFilter: '',
+            sortBy: 'installation_date',
+            sortDirection: 'desc',
             errors: {},
+            currentPage: 1,
+            hasMorePages: true,
+            isLoading: false,
+            perPage: 10,
+            scheduleForm: {
+                duration: '',
+                status: '',
+                notes: ''
+            },
+
+            totalRecords: 0,
+            isScrolled: false,
+            importFile: null,
+            hasFile: false,
 
             init() {
+                this.fetchProjects();
+            },
+
+            init() {
+                window.addEventListener('scroll', () => {
+                    this.isScrolled = window.scrollY > 100;
+                });
+            },
+
+            resetAndFetch() {
+                this.currentPage = 1;
+                this.projects = [];
+                this.fetchProjects();
+            },
+
+            deleteSchedule(schedule) {
+                if (!confirm('Are you sure you want to delete this schedule?')) return;
+
+                this.isLoading = true;
+                axios.delete(`/schedules/${schedule.id}`)
+                    .then(() => {
+                        const projectIndex = this.projects.findIndex(p => p.id === schedule.project_id);
+                        this.projects[projectIndex].schedules = this.projects[projectIndex].schedules?.filter(s => s.id !== schedule.id);
+                    })
+                    .catch(error => {
+                        console.error('Error deleting schedule:', error);
+                    })
+                    .finally(() => {
+                        this.isLoading = false;
+                    });
+            },
+
+            loadMore() {
+                this.currentPage++;
                 this.fetchProjects();
             },
 
@@ -356,47 +378,88 @@
                 if (this.currentProject.contract_date) {
                     const date = new Date(this.currentProject.contract_date);
                     date.setDate(date.getDate() + 70);
-                    // Format the date as YYYY-MM-DD
                     this.currentProject.delivery_date = date.toISOString().split('T')[0];
 
-                    // set installation date to 10 days from delivery date
-                    const installationDate = new Date(this.currentProject.delivery_date);
-                    installationDate.setDate(installationDate.getDate() + 10);
-                    this.currentProject.installation_date = installationDate.toISOString().split('T')[0];
+                    this.setInstallationDate();
                 }
             },
 
-            async fetchProjects() {
-                try {
-                    const response = await fetch('/projects', {
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    });
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    this.projects = await response.json();
-                } catch (error) {
+            setInstallationDate() {
+                if (this.currentProject.delivery_date) {
+                    const date = new Date(this.currentProject.delivery_date);
+                    date.setDate(date.getDate() + 10);
+                    this.currentProject.installation_date = date.toISOString().split('T')[0];
+                }
+            },
+
+            openScheduleModal(project) {
+                this.currentProject = project;
+                this.$dispatch('open-modal', 'schedule-modal');
+                this.$nextTick(() => {
+                    const durationInput = document.getElementById('duration');
+                    if (durationInput) {
+                        durationInput.focus();
+                    }
+                });
+            },
+
+            fetchProjects() {
+                this.isLoading = true;
+                axios.get('/projects', {
+                    params: {
+                        page: this.currentPage,
+                        per_page: this.perPage,
+                        sort_by: this.sortBy,
+                        sort_direction: this.sortDirection,
+                        status: this.statusFilter,
+                        search: this.search,
+                        schedules_filter: this.schedulesFilter
+                    }
+                }).then(response => {
+                    if (this.currentPage === 1) {
+                        this.projects = response.data.data;
+                    } else {
+                        this.projects = [...this.projects, ...response.data.data];
+                    }
+                    this.hasMorePages = response.data.current_page < response.data.last_page;
+                    this.totalRecords = response.data.total;
+                }).catch(error => {
                     console.error('Error fetching projects:', error);
                     alert('Failed to load projects. Please refresh the page.');
-                }
+                }).finally(() => {
+                    this.isLoading = false;
+                });
             },
 
-            get filteredProjects() {
-                return this.projects
-                    .filter(project => {
-                        const matchesSearch = project.name?.toLowerCase().includes(this.search.toLowerCase()) ||
-                                            project.location?.toLowerCase().includes(this.search.toLowerCase()) ||
-                                            project.quotation_number?.includes(this.search);
-                        const matchesStatus = !this.statusFilter || project.status === this.statusFilter;
-                        return matchesSearch && matchesStatus;
-                    })
-                    .sort((a, b) => {
-                        if (this.sortBy === 'value') {
-                            return (b.value || 0) - (a.value || 0);
-                        }
-                        return new Date(b[this.sortBy]) - new Date(a[this.sortBy]);
-                    });
+            resetScheduleForm() {
+                this.scheduleForm = {
+                    duration: '',
+                    status: '',
+                    notes: ''
+                };
+            },
+
+            saveSchedule() {
+                this.errors = {}; // Clear previous errors
+                this.isLoading = true;
+
+                axios.post('/schedules/' + this.currentProject.id, this.scheduleForm)
+                .then(response => {
+                    const savedSchedule = response.data;
+                    this.currentProject.schedules?.unshift(savedSchedule);
+                    this.$dispatch('close-modal', 'schedule-modal');
+                    this.resetScheduleForm();
+                })
+                .catch(error => {
+                    if (error.response && error.response.data && error.response.data.errors) {
+                        this.errors = error.response.data.errors;
+                    } else {
+                        console.error('Error saving schedule:', error);
+                    }
+                })
+                .finally(() => {
+                    this.isLoading = false;
+                });
             },
 
             formatDate(date) {
@@ -411,81 +474,72 @@
                 })}`;
             },
 
-            async saveProject() {
+            saveProject() {
                 this.errors = {}; // Clear previous errors
-                try {
-                    const url = this.editingProject 
-                        ? `/projects/${this.currentProject.id}`
-                        : '/projects';
-                    
-                    const formData = {
-                        ...this.currentProject,
-                        _method: this.editingProject ? 'PUT' : 'POST'
-                    };
-                    
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify(formData)
-                    });
+                this.isLoading = true;
 
-                    if (!response.ok) {
-                        const data = await response.json();
-                        if (response.status === 422) {
-                            this.errors = data.errors;
-                            return;
-                        }
-                        throw new Error('Failed to save project');
-                    }
+                const method = this.editingProject ? 'PUT' : 'POST';
+                const url = this.editingProject ? `/projects/${this.currentProject.id}` : '/projects';
 
-                    const savedProject = await response.json();
-
+                axios({
+                    method: method,
+                    url: url,
+                    data: this.currentProject
+                })
+                .then(response => {
+                    const savedProject = response.data;
                     if (this.editingProject) {
                         const index = this.projects.findIndex(p => p.id === savedProject.id);
-                        if (index !== -1) this.projects[index] = savedProject;
+                        if (index !== -1) {
+                            this.projects[index] = savedProject;
+                        }
                     } else {
                         this.projects.unshift(savedProject);
                     }
-
                     this.$dispatch('close-modal', 'project-modal');
                     this.resetForm();
-                } catch (error) {
-                    console.error('Error saving project:', error);
-                    alert('Failed to save project. Please try again.');
-                }
+                })
+                .catch(error => {
+                    if (error.response && error.response.data && error.response.data.errors) {
+                        this.errors = error.response.data.errors;
+                    } else {
+                        console.error('Error saving project:', error);
+                    }
+                })
+                .finally(() => {
+                    this.isLoading = false;
+                });
             },
 
-            async deleteProject(id) {
+            deleteProject(id) {
                 if (!confirm('Are you sure you want to delete this project?')) return;
 
-                try {
-                    const response = await fetch(`/projects/${id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        }
+                this.isLoading = true;
+                axios.delete(`/projects/${id}`)
+                    .then(() => {
+                        this.projects = this.projects.filter(p => p.id !== id);
+                    })
+                    .catch(error => {
+                        console.error('Error deleting project:', error);
+                    })
+                    .finally(() => {
+                        this.isLoading = false;
                     });
-
-                    if (!response.ok) throw new Error('Failed to delete project');
-
-                    this.projects = this.projects.filter(p => p.id !== id);
-                } catch (error) {
-                    console.error('Error deleting project:', error);
-                    alert('Failed to delete project. Please try again.');
-                }
             },
 
-            editProject(project) {
-                this.editingProject = true;
-                this.currentProject = {
+            openProjectModal(project = null) {
+                this.errors = {};
+                this.resetForm();
+                this.editingProject = project != null;
+
+                this.currentProject = project != null ? {
                     ...project,
+                    status: project.status == null || project.status == 'Done' ? 'pending' : project.status,
                     contract_date: this.formatDateForInput(project.contract_date),
                     delivery_date: this.formatDateForInput(project.delivery_date),
                     installation_date: this.formatDateForInput(project.installation_date)
+                } : {
+                    status: 'pending'
                 };
                 this.$dispatch('open-modal', 'project-modal');
             },
@@ -510,11 +564,44 @@
                     delivery_date: '',
                     installation_date: '',
                     type_of_work: '',
-                    duration: '',
                     value: '',
-                    status: 'pending'
+                    status: 'pending',
+                    notes: ''
                 };
+            },
+
+            scrollToTop() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            },
+
+            handleFileSelect(event) {
+                this.importFile = event.target.files[0];
+                this.hasFile = !!this.importFile;
+            },
+
+            importProjects() {
+                if (!this.importFile) return;
+
+                const formData = new FormData();
+                formData.append('file', this.importFile);
+
+                axios.post('/projects/import', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }).then(response => {
+                    this.$dispatch('close-modal', 'import-modal');
+                    this.fetchProjects();
+                    alert('Projects imported successfully');
+                }).catch(error => {
+                    console.error('Error importing projects:', error);
+                    alert('Error importing projects. Please check the file format and try again.');
+                });
             }
         }));
     });
 </script>
+

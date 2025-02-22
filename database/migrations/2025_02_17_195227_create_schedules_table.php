@@ -13,11 +13,14 @@ return new class extends Migration
     {
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->constrained('projects')->unique();
-            $table->date('start_date');
-            $table->date('end_date');
+            $table->foreignId('project_id')->constrained('projects');
+            $table->integer('duration');
+            $table->date('start_date')->nullable();
+            $table->text('notes')->nullable();
+            $table->string('status')->nullable();
+            $table->date('end_date')->nullable();
             $table->string('color')->nullable();
-            $table->integer('row');
+            $table->integer('row')->nullable();
             $table->timestamps();
         });
     }

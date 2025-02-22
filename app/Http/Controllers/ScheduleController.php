@@ -11,12 +11,16 @@ class ScheduleController extends Controller
     public function index(Request $request, $month = null, $year = null)
     {
         if ($request->wantsJson()) {
-            $projects = Project::query()
-                ->whereNotNull('duration')
-                ->whereDoesntHave('schedule')
+            $unPlacedSchedules = Schedule::query()
+                ->with('project')
+                ->whereNull('start_date')
+                ->orWhereNull('end_date')
+                ->join('projects', 'schedules.project_id', '=', 'projects.id')
+                ->select('schedules.*')
+                ->orderBy('projects.installation_date', 'asc')
                 ->get();
 
-            $scheduledProjects = Schedule::query()
+            $schedules = Schedule::query()
                 ->with('project')
                 ->whereMonth('start_date', $month)
                 ->whereYear('start_date', $year)
@@ -25,8 +29,8 @@ class ScheduleController extends Controller
                 ->get();
 
             return response()->json([
-                'projects' => $projects,
-                'scheduledProjects' => $scheduledProjects,
+                'unPlacedSchedules' => $unPlacedSchedules,
+                'schedules' => $schedules,
             ]);
         }
 
@@ -37,48 +41,43 @@ class ScheduleController extends Controller
     {
 
         $validated = $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'row' => 'required|integer|min:1',
-            'duration' => 'required|integer|min:1'
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'row' => 'nullable|integer|min:1',
+            'duration' => 'required|integer|min:1',
+            'color' => 'nullable|string|max:255',
+            'notes' => 'nullable|string|max:255',
         ]);
 
         $schedule->update([
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
+            'duration' => $validated['duration'],
             'row' => $validated['row'],
+            'color' => $validated['color'],
+            'notes' => $validated['notes'],
         ]);
 
-        $schedule->project->update([
-            'duration' => $validated['duration']
-        ]);
-
-        return response()->json($schedule->load('project'));
+        return response()->json($schedule);
     }
     
 
     public function store(Request $request, Project $project)
     {
         $validated = $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'row' => 'required|integer|min:1',
-            'duration' => 'required|integer|min:1'
+            'duration' => 'required|integer|min:1',
+            'status' => 'nullable|string|max:255',
+            'notes' => 'nullable|string|max:255',
         ]);
 
-        $project->schedule()->updateOrCreate([
-            'project_id' => $project->id
-        ], [
-            'start_date' => $validated['start_date'],
-            'end_date' => $validated['end_date'],
-            'row' => $validated['row'],
-        ]); 
-
-        $project->update([
-            'duration' => $validated['duration']
+        $schedule = Schedule::create([
+            'project_id' => $project->id,
+            'duration' => $validated['duration'],
+            'status' => $validated['status'],
+            'notes' => $validated['notes'],
         ]);
 
-        return response()->json($project);
+        return response()->json($schedule);
     }
 
     public function destroy(Schedule $schedule)

@@ -18,9 +18,9 @@ class Project extends Model
         'delivery_date',
         'installation_date',
         'type_of_work',
-        'duration',
         'value',
         'status',
+        'notes',
     ];
 
     protected $casts = [
@@ -30,13 +30,8 @@ class Project extends Model
         'value' => 'decimal:2'
     ];
 
-    public function schedule()
+    public function schedules()
     {
-        return $this->hasOne(Schedule::class);
-    }
-
-    public function getStartDateAttribute()
-    {
-        return $this->schedule->start_date;
+        return $this->hasMany(Schedule::class);
     }
 } 

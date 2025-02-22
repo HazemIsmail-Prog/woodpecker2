@@ -10,13 +10,26 @@ class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
-        $employees = Employee::latest()->get();
-
         if ($request->wantsJson()) {
+            $perPage = $request->input('per_page', 10);
+            $sortBy = $request->input('sort_by', 'name');
+            $sortDirection = $request->input('sort_direction', 'asc');
+            $type = $request->input('type', '');
+            $search = $request->input('search', '');
+
+            $employees = Employee::query()
+                ->when($type, function ($query) use ($type) {
+                    return $query->where('type', $type);
+                })
+                ->when($search, function ($query) use ($search) {
+                    return $query->where('name', 'like', '%' . $search . '%');
+                })
+                ->orderBy($sortBy, $sortDirection)
+                ->paginate($perPage);
+
             return response()->json($employees);
         }
-
-        return view('employees.index', compact('employees'));
+        return view('employees.index');
     }
 
     public function store(Request $request)

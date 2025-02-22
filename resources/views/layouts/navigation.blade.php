@@ -28,6 +28,10 @@
                         class="text-gray-900 dark:text-gray-100">
                         {{ __('Employees') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('daily-schedules.index')" :active="request()->routeIs('daily-schedules.index')"
+                        class="text-gray-900 dark:text-gray-100">
+                        {{ __('Daily Schedules') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -102,6 +106,10 @@
             <x-responsive-nav-link :href="route('employees.index')" :active="request()->routeIs('employees.index')"
                 class="text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
                 {{ __('Employees') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('daily-schedules.index')" :active="request()->routeIs('daily-schedules.index')"
+                class="text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                {{ __('Daily Schedules') }}
             </x-responsive-nav-link>
         </div>
 

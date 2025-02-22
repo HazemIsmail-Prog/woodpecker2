@@ -17,10 +17,10 @@ return new class extends Migration
             $table->string('quotation_number')->nullable();
             $table->date('delivery_date')->nullable();
             $table->date('installation_date')->nullable();
-            $table->integer('duration')->nullable();
             $table->string('type_of_work')->nullable();
             $table->decimal('value', 10, 2)->nullable();
-            $table->string('status')->nullable();
+            $table->string('status')->default('pending');
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }
