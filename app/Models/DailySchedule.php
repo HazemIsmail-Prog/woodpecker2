@@ -6,14 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class DailySchedule extends Model
 {
-    protected $fillable = [
-        'project_id',
-        'employee_id',
-        'date'
-    ];
+    protected $fillable = ['date', 'project_id', 'employee_ids'];
 
     protected $casts = [
-        'date' => 'date'
+        'date' => 'date',
+        'employee_ids' => 'array'
     ];
 
     public function project()
@@ -21,8 +18,8 @@ class DailySchedule extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function employee()
+    public function employees()
     {
-        return $this->belongsTo(Employee::class);
+        return Employee::whereIn('id', $this->employee_ids ?? [])->get();
     }
 }

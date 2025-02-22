@@ -12,22 +12,16 @@ class DailyScheduleController extends Controller
 {
     public function index(Request $request)
     {
-        $date = $request->date ? date('Y-m-d', strtotime($request->date)) : date('Y-m-d');
-        
+        $date = $request->query('date', now()->addDay()->format('Y-m-d'));
+
         // Get existing schedule for the date
-        $dailySchedules = DailySchedule::with(['project', 'employee'])
+        $dailySchedules = DailySchedule::query()
             ->whereDate('date', $date)
-            ->get()
-            ->groupBy('project_id');
+            ->get();
 
         // Get active employees and ongoing projects
-        $employees = Employee::where('is_active', true)
-            ->orderBy('type')
-            ->orderBy('name')
-            ->get();
-
-        $projects = Project::orderBy('name')
-            ->get();
+        $employees = Employee::where('is_active', true)->get();
+        $projects = Project::get();
 
         if ($request->wantsJson()) {
             return response()->json($dailySchedules);
@@ -43,67 +37,52 @@ class DailyScheduleController extends Controller
             'assignments' => 'required|array',
             'assignments.*.project_id' => 'required|exists:projects,id',
             'assignments.*.employee_ids' => 'nullable|array',
-            'assignments.*.employee_ids.*' => 'nullable|exists:employees,id'
-        ]);
-
-        // Delete existing schedules for this date
-        DailySchedule::where('date', $validated['date'])->delete();
-
-        $data = [];
-
-        // Create new schedules
-        foreach ($validated['assignments'] as $assignment) {
-            if (empty($assignment['employee_ids'])) {
-                // Create schedule without employees
-                $data[] = [
-                    'date' => $validated['date'],
-                    'project_id' => $assignment['project_id'],
-                    'employee_id' => null
-                ];
-            } else {
-                // Create schedule for each employee
-                foreach ($assignment['employee_ids'] as $employeeId) {
-                    $data[] = [
-                        'date' => $validated['date'],
-                        'project_id' => $assignment['project_id'],
-                        'employee_id' => $employeeId
-                    ];
-                }
-            }
-        }
-        // dd($data);
-
-        DailySchedule::insert($data);
-        return response()->json(['message' => 'Schedule saved successfully']);
-    }
-
-    public function destroy(Request $request)
-    {
-
-        $validated = $request->validate([   
-            'date' => 'required|date'
+            'assignments.*.employee_ids.*' => 'exists:employees,id'
         ]);
 
         DailySchedule::whereDate('date', $validated['date'])->delete();
-        return response()->json(['message' => 'Schedule deleted successfully']);
+        $data = [];
+        foreach ($validated['assignments'] as $assignment) {
+            $data[] = [
+                'date' => $validated['date'],
+                'project_id' => $assignment['project_id'],
+                'employee_ids' => json_encode($assignment['employee_ids'])
+            ];
+        }
+        // dd($data);
+        DailySchedule::insert($data);
+
+        return response()->json(['message' => 'Schedule saved successfully']);
     }
 
     public function downloadPdf(Request $request)
     {
-        $date = $request->date ? date('Y-m-d', strtotime($request->date)) : date('Y-m-d');
-        
-        $dailySchedules = DailySchedule::with(['project', 'employee'])
+        // format date like this Saterday, Febuary 22, 2025
+        $date = $request->query('date', now()->format('Y-m-d'));
+        $dateText = date('l, F d, Y', strtotime($date));
+
+        $dailySchedules = DailySchedule::with(['project'])
             ->whereDate('date', $date)
             ->get()
-            ->groupBy('project_id');
+            ->map(function($schedule) {
+                $schedule->employee = Employee::whereIn('id', $schedule->employee_ids)->get();
+                return $schedule;
+            });
 
-        $formattedDate = date('l, F j, Y', strtotime($date));
-        
         $pdf = PDF::loadView('daily_schedules.pdf', [
             'dailySchedules' => $dailySchedules,
-            'date' => $formattedDate
+            'date' => $dateText
         ])->setPaper('a4', 'landscape');
 
         return $pdf->download("daily-schedule-{$date}.pdf");
+    }
+
+    public function destroy(Request $request)
+    {
+        $date = $request->query('date');
+        
+        DailySchedule::whereDate('date', $date)->delete();
+        
+        return response()->json(['message' => 'Schedule deleted successfully']);
     }
 } 

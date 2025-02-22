@@ -13,10 +13,13 @@ return new class extends Migration
     {
         Schema::create('daily_schedules', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->constrained('projects');
-            $table->foreignId('employee_id')->nullable()->constrained('employees');
             $table->date('date');
+            $table->foreignId('project_id')->constrained()->onDelete('cascade');
+            $table->json('employee_ids')->nullable();
             $table->timestamps();
+
+            // Add unique constraint to prevent duplicate project schedules per day
+            $table->unique(['date', 'project_id']);
         });
     }
 

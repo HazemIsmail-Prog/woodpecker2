@@ -65,24 +65,42 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($dailySchedules as $projectId => $schedules)
+            @foreach($dailySchedules as $schedule)
                 <tr>
                     <td class="text-center">{{ $loop->iteration }}</td>
                     <td>
-                        <div class="project-name">{{ $schedules[0]->project->name }}</div>
+                        <div class="project-name">{{ $schedule->project->name }}</div>
                         <div class="project-details">
-                            {{ $schedules[0]->project->quotation_number }}<br>
-                            {{ $schedules[0]->project->location }}
+                            {{ $schedule->project->quotation_number }}<br>
+                            {{ $schedule->project->location }}
                         </div>
                     </td>
                     <td>
-                        {{ $schedules->where('employee.type', 'supervisor')->pluck('employee.name')->unique()->implode(', ') ?: '-' }}
+                        @if($schedule->employee->where('type', 'supervisor')->count() > 0)
+                            @foreach($schedule->employee->where('type', 'supervisor')->pluck('name') as $employee)
+                                {{ $employee }} @if(!$loop->last)- @endif
+                            @endforeach
+                        @else
+                            -
+                        @endif
                     </td>
                     <td>
-                        {{ $schedules->where('employee.type', 'technician')->pluck('employee.name')->unique()->implode(', ') ?: '-' }}
+                        @if($schedule->employee->where('type', 'technician')->count() > 0)
+                            @foreach($schedule->employee->where('type', 'technician')->pluck('name') as $employee)
+                            {{ $employee }} @if(!$loop->last)- @endif
+                            @endforeach
+                        @else
+                            -
+                        @endif
                     </td>
                     <td>
-                        {{ $schedules->where('employee.type', 'engineer')->pluck('employee.name')->unique()->implode(', ') ?: '-' }}
+                        @if($schedule->employee->where('type', 'engineer')->count() > 0)
+                            @foreach($schedule->employee->where('type', 'engineer')->pluck('name') as $employee)
+                                {{ $employee }} @if(!$loop->last)- @endif
+                            @endforeach
+                        @else
+                            -
+                        @endif
                     </td>
                 </tr>
             @endforeach

@@ -251,6 +251,7 @@
                     axios.get('/daily-schedules?date=' + this.selectedDate)
                         .then(response => {
                             this.dailySchedules = response.data;
+                            console.log(this.dailySchedules);
                             this.loadExistingSchedule();
                         })
                         .catch(error => {
@@ -260,9 +261,9 @@
 
                 loadExistingSchedule() {
                     if (this.dailySchedules) {
-                        this.assignments = Object.entries(this.dailySchedules).map(([projectId, schedules]) => ({
-                            project_id: parseInt(projectId),
-                            employee_ids: schedules.map(s => s.employee_id)
+                        this.assignments = this.dailySchedules.map(schedule => ({
+                            project_id: schedule.project_id,
+                            employee_ids: schedule.employee_ids
                         }));
                     }
                 },
@@ -306,7 +307,7 @@
                         employee_ids: []
                     });
 
-                    this.selectedProject = project;
+                    // this.selectedProject = project;
                 },
 
                 selectProject(project) {
@@ -315,38 +316,27 @@
 
                 toggleEmployee(employee) {
                     if (!this.selectedProject) return;
-
-                    const assignmentIndex = this.assignments.findIndex(a => a.project_id === this.selectedProject.id);
-                    if (assignmentIndex === -1) {
-                        this.assignments.push({
-                            project_id: this.selectedProject.id,
-                            employee_ids: [employee.id]
-                        });
-                    } else {
-                        const employeeIds = this.assignments[assignmentIndex].employee_ids;
-                        const employeeIndex = employeeIds.indexOf(employee.id);
-                        
-                        if (employeeIndex === -1) {
-                            employeeIds.push(employee.id);
-                        } else {
-                            employeeIds.splice(employeeIndex, 1);
+                    this.assignments.forEach(assignment => {
+                        if(assignment.project_id === this.selectedProject.id){
+                            if(assignment.employee_ids.includes(employee.id)){
+                                assignment.employee_ids = assignment.employee_ids.filter(id => id !== employee.id);
+                            }else{
+                                assignment.employee_ids.push(employee.id);
+                            }
                         }
-
-                        if (employeeIds.length === 0) {
-                            this.assignments.splice(assignmentIndex, 1);
-                            this.selectedProject = null;
-                        }
-                    }
+                    });
                 },
 
                 isEmployeeSelected(employeeId) {
-                    if (!this.selectedProject) return false;
-                    const assignment = this.assignments.find(a => a.project_id === this.selectedProject.id);
-                    return assignment?.employee_ids.includes(employeeId) || false;
+                    return this.assignments.some(assignment => 
+                        assignment.project_id === this.selectedProject.id && 
+                        assignment.employee_ids.includes(employeeId)
+                    );
                 },
 
                 removeAssignment(index) {
                     this.assignments.splice(index, 1);
+                    this.selectedProject = null;
                 },
 
                 saveSchedule() {
