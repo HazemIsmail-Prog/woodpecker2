@@ -9,6 +9,14 @@
     </x-slot>
 
     <div class="h-[calc(100vh-145px)] bg-gray-100 dark:bg-gray-900" x-data="indexComponent()">
+        <!-- Add loading overlay -->
+        <div x-show="isLoading" 
+             class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 flex items-center space-x-3">
+                <div class="animate-spin rounded-full h-8 w-8 border-4 border-[#ac7909] border-t-transparent"></div>
+                <span class="text-gray-900 dark:text-gray-100">Loading...</span>
+            </div>
+        </div>
 
         <template x-teleport="#statistics">
             <!-- Statistics Cards -->
@@ -485,7 +493,6 @@
 <script>
     function indexComponent(){
         return {
-
             unPlacedSchedules: [],
             schedules: [],
             currentMonth: new Date(),
@@ -494,11 +501,10 @@
             searchQuery: '',
             isModalOpen: false,
             modalSchedule: {},
-
-
+            isLoading: false,
 
             init(){
-                this.fetchData();
+                this.fetchData(true);
             },
 
             openModal(schedule){
@@ -648,8 +654,9 @@
                 }).replace(/\//g, '/');
             },
 
-            fetchData(){
-                const month = this.currentMonth.getMonth() + 1; // Add 1 since getMonth() is 0-based
+            fetchData(enableLoading = false){
+                    this.isLoading = enableLoading;
+                const month = this.currentMonth.getMonth() + 1;
                 const year = this.currentMonth.getFullYear();
                 const monthStr = month.toString().padStart(2, '0');
                 const yearStr = year.toString();
@@ -659,6 +666,8 @@
                     this.schedules = response.data.schedules;
                 }).catch(error => {
                     console.error('Error fetching data:', error);
+                }).finally(() => {
+                    this.isLoading = false;
                 });
             },
             
@@ -682,12 +691,12 @@
             previousMonth() {
                 this.schedules = [];
                 this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() - 1);
-                this.fetchData();
+                this.fetchData(true);
             },
             nextMonth() {
                 this.schedules = [];
                 this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1);
-                this.fetchData();
+                this.fetchData(true);
             },
 
             checkOverlap(startDate, endDate, row, excludeScheduleId = null) {
@@ -714,9 +723,9 @@
             saveSchedule() {
                 if (!this.modalSchedule) return;                
                 axios.put('/schedules/' + this.modalSchedule.id, this.modalSchedule)
-                    .then(response => {
-                        this.fetchData();
-                        this.closeModal();
+                .then(response => {
+                    this.closeModal();
+                        this.fetchData(true);
                     })
                     .catch(error => {
                         alert('Error updating schedule:', error);

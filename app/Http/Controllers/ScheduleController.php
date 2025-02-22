@@ -11,6 +11,7 @@ class ScheduleController extends Controller
 {
     public function index(Request $request, $month = null, $year = null)
     {
+
         if ($request->wantsJson()) {
             $unPlacedSchedules = Schedule::query()
                 ->with('project')
