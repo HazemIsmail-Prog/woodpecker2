@@ -43,6 +43,9 @@
             color: #666;
             font-size: 0.9em;
         }
+        .text-center {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -64,7 +67,7 @@
         <tbody>
             @foreach($dailySchedules as $projectId => $schedules)
                 <tr>
-                    <td>{{ $loop->iteration }}</td>
+                    <td class="text-center">{{ $loop->iteration }}</td>
                     <td>
                         <div class="project-name">{{ $schedules[0]->project->name }}</div>
                         <div class="project-details">
