@@ -133,7 +133,13 @@
                         <div class="flex-1 overflow-hidden">
                             <!-- Days header - Fixed -->
                             <div class="flex border-b border-gray-200 dark:border-gray-700">
-                                <div  class="w-[40px] shrink-0 border border-gray-200 dark:border-gray-600"></div>
+                                <div  class="w-[40px] shrink-0 border border-gray-200 dark:border-gray-600 flex items-center justify-center">
+                                    <button @click="compactMode = !compactMode" class="w-full h-full">
+
+                                        <i x-show="!compactMode" class="fas fa-minus"></i>
+                                        <i x-show="compactMode" class="fas fa-expand"></i>
+                                    </button>
+                                </div>
                                 <template x-for="day in getDaysInMonth()" :key="day">
                                     <div class="w-[40px] shrink-0 border border-gray-200 dark:border-gray-600"
                                         :class="{
@@ -154,9 +160,14 @@
                             <div class="overflow-y-auto h-[calc(100%-3rem)] hide-scrollbar">
                                 <div class="relative">
                                     <template x-for="i in rowsCount" :key="i">
-                                        <div class="flex h-[100px] select-none relative">
+                                        <div class="flex select-none relative"
+                                            :class="{
+                                                'h-[31px]': compactMode,
+                                                'h-[100px]': !compactMode
+                                            }"
+                                        >
                                             <!-- Days cells -->
-                                             <div class="w-[40px] text-xs flex items-center justify-center shrink-0 border h-full border-gray-200 dark:border-gray-600" x-text="i"></div>
+                                            <div class="w-[40px] text-xs flex items-center justify-center shrink-0 border h-full border-gray-200 dark:border-gray-600" x-text="i"></div>
                                             <template x-for="day in getDaysInMonth()" :key="day">
                                                 <div 
                                                     class="w-[40px] shrink-0 border h-full border-gray-200 dark:border-gray-600"
@@ -174,8 +185,13 @@
                                             <template x-for="schedule in schedules.filter(p => p.row === i)" :key="schedule.id">
                                                 <div 
                                                     :title="schedule.project.name"
-                                                    :class="[schedule.color ? schedule.color + ' bg-opacity-50' : 'bg-[#ac7909]/50 dark:bg-[#ac7909]/60', schedule.notes ? 'animate-pulse hover:animate-none' : '']"
-                                                    class="absolute h-[90px] m-1 p-2 rounded-lg overflow-hidden text-sm group cursor-move"
+                                                    :class="[
+                                                        schedule.color ? schedule.color + ' bg-opacity-50' : 'bg-[#ac7909]/50 dark:bg-[#ac7909]/60', 
+                                                        schedule.notes ? 'animate-pulse hover:animate-none' : '',
+                                                        compactMode ? 'h-[23px] rounded-sm text-xs' : 'h-[90px] rounded-lg text-sm',
+                                                        compactMode ? 'p-1' : 'p-2',
+                                                        ]"
+                                                    class="absolute m-1 group cursor-move overflow-hidden"
                                                     x-on:dblclick.stop="openModal(schedule)"
                                                     draggable="true"
                                                     @dragstart.stop="draggedSchedule = schedule"
@@ -199,7 +215,7 @@
                                                     <div class="flex flex-col h-full">
                                                         <div class="flex justify-between items-start">
                                                             <span class="font-medium truncate text-gray-900 dark:text-gray-100" x-text="schedule.project?.name"></span>
-                                                            <button @click.stop="setScheduleToUnPlaced(schedule)"
+                                                            <button x-show="!compactMode" @click.stop="setScheduleToUnPlaced(schedule)"
                                                                     class="text-gray-400 hover:text-red-500 p-1 -mt-1 -mr-1">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m4-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -502,6 +518,7 @@
             isModalOpen: false,
             modalSchedule: {},
             isLoading: false,
+            compactMode: false,
 
             init(){
                 this.fetchData(true);
