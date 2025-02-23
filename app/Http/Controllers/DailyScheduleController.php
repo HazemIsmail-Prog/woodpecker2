@@ -30,6 +30,13 @@ class DailyScheduleController extends Controller
         return view('daily_schedules.index', compact('employees', 'projects'));
     }
 
+    public function latest(Request $request)
+    {
+        // get all daily schedules for the latest date
+        $dailySchedules = DailySchedule::whereDate('date', now()->format('Y-m-d'))->get();
+        return response()->json($dailySchedules);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

@@ -82,7 +82,16 @@
                         <p class="text-gray-600 dark:text-gray-400" x-text="formatDate(selectedDate)"></p>
                     </div>
                     <div class="overflow-y-auto hide-scrollbar flex-1">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <div x-show="!assignments.length" class="flex flex-col items-center justify-center space-y-3 p-8">
+                            <button @click="loadLatestSchedule" class="bg-[#ac7909] hover:bg-[#8e6407] text-white px-6 py-3 rounded-md focus:ring-[#ac7909] focus:ring-2 focus:outline-none flex items-center">
+                                <i class="fas fa-calendar-check mr-2"></i>
+                                Load Latest Project List
+                            </button>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm italic">
+                                This will only load the latest project list without saving
+                            </p>
+                        </div>
+                        <table x-show="assignments.length > 0" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">SN.</th>
@@ -227,6 +236,14 @@
                         this.selectedDate = window.location.search.split('=')[1];
                     }
                     this.fetchDailySchedules();
+                },
+
+                loadLatestSchedule() {
+                    axios.get('/daily-schedules/latest')
+                        .then(response => {
+                            this.dailySchedules = response.data;
+                            this.loadExistingSchedule();
+                        });
                 },
 
                 get filteredProjects() {

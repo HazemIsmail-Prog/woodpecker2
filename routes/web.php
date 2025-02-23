@@ -41,6 +41,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/daily-schedules', [DailyScheduleController::class, 'store'])->name('daily-schedules.store');
     Route::delete('/daily-schedules', [DailyScheduleController::class, 'destroy'])->name('daily-schedules.destroy');
 
+    Route::get('/daily-schedules/latest', [DailyScheduleController::class, 'latest'])->name('daily-schedules.latest');
+
     Route::get('/daily-schedules/pdf', [DailyScheduleController::class, 'downloadPdf'])
         ->name('daily-schedules.pdf');
 
