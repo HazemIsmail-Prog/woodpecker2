@@ -32,8 +32,10 @@ class DailyScheduleController extends Controller
 
     public function latest(Request $request)
     {
+
+        $latestDate = DailySchedule::max('date');
         // get all daily schedules for the latest date
-        $dailySchedules = DailySchedule::whereDate('date', now()->format('Y-m-d'))->get();
+        $dailySchedules = DailySchedule::whereDate('date', $latestDate)->get();
         return response()->json($dailySchedules);
     }
 
