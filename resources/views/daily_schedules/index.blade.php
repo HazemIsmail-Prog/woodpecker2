@@ -138,13 +138,25 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <span class="text-gray-900 dark:text-gray-100" x-text="getSupervisors(assignment.employee_ids)"></span>
+                                            <div class="flex flex-wrap gap-1">
+                                                <template x-for="employee in getSupervisors(assignment.employee_ids)" :key="employee.id">
+                                                    <span @click=removeEmployeeFromAssignments(employee.id) class="cursor-pointer px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#ac7909]/10 text-[#ac7909] dark:bg-[#ac7909]/20 dark:text-[#ac7909]" x-text="getEmployeeName(employee.id)"></span>
+                                                </template>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <span class="text-gray-900 dark:text-gray-100" x-text="getTechnicians(assignment.employee_ids)"></span>
+                                            <div class="flex flex-wrap gap-1">
+                                                <template x-for="employee in getTechnicians(assignment.employee_ids)" :key="employee.id">
+                                                    <span @click=removeEmployeeFromAssignments(employee.id) class="cursor-pointer px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#ac7909]/10 text-[#ac7909] dark:bg-[#ac7909]/20 dark:text-[#ac7909]" x-text="getEmployeeName(employee.id)"></span>
+                                                </template>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <span class="text-gray-900 dark:text-gray-100" x-text="getEngineers(assignment.employee_ids)"></span>
+                                            <div class="flex flex-wrap gap-1">
+                                                <template x-for="employee in getEngineers(assignment.employee_ids)" :key="employee.id">
+                                                    <span @click=removeEmployeeFromAssignments(employee.id) class="cursor-pointer px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#ac7909]/10 text-[#ac7909] dark:bg-[#ac7909]/20 dark:text-[#ac7909]" x-text="getEmployeeName(employee.id)"></span>
+                                                </template>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 text-right">
                                             <button @click="removeAssignment(index)" 
@@ -379,6 +391,13 @@
                     );
                 },
 
+                removeEmployeeFromAssignments(employeeId){
+                    // Remove employee from all assignments
+                    this.assignments.forEach(assignment => {
+                        assignment.employee_ids = assignment.employee_ids.filter(id => id !== employeeId);
+                    });
+                },
+
                 removeAssignment(index) {
                     this.assignments.splice(index, 1);
                     this.selectedProject = null;
@@ -416,24 +435,23 @@
                 },
 
                 getSupervisors(employeeIds) {
+                    // get array of employee ids
                     return this.employees
-                        .filter(e => employeeIds.includes(e.id) && e.type === 'supervisor')
-                        .map(e => e.name)
-                        .join(', ');
+                        .filter(e => employeeIds.includes(e.id) && e.type === 'supervisor');
                 },
 
                 getEngineers(employeeIds) {
                     return this.employees
-                        .filter(e => employeeIds.includes(e.id) && e.type === 'engineer')
-                        .map(e => e.name)
-                        .join(', ');
+                        .filter(e => employeeIds.includes(e.id) && e.type === 'engineer');
                 },
 
                 getTechnicians(employeeIds) {
                     return this.employees
-                        .filter(e => employeeIds.includes(e.id) && e.type === 'technician')
-                        .map(e => e.name)
-                        .join(', ');
+                        .filter(e => employeeIds.includes(e.id) && e.type === 'technician');
+                },
+
+                getEmployeeName(employeeId) {
+                    return this.employees.find(e => e.id === employeeId)?.name || '';
                 },
 
                 formatDate(date) {
