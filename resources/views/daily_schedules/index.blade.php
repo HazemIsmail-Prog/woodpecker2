@@ -82,7 +82,13 @@
                         <p class="text-gray-600 dark:text-gray-400" x-text="formatDate(selectedDate)"></p>
                     </div>
                     <div class="overflow-y-auto hide-scrollbar flex-1">
-                        <div x-show="!assignments.length" class="flex flex-col items-center justify-center space-y-3 p-8">
+                        <div x-show="fetchingDailySchedules" class="flex flex-col items-center justify-center space-y-3 p-8">
+                            <svg class="animate-spin h-8 w-8 text-[#ac7909]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                        <div x-show="!assignments.length && !fetchingDailySchedules" class="flex flex-col items-center justify-center space-y-3 p-8">
                             <button @click="loadLatestSchedule " 
                                     class="bg-[#ac7909] hover:bg-[#8e6407] text-white px-6 py-3 rounded-md focus:ring-[#ac7909] focus:ring-2 focus:outline-none flex items-center"
                                     :disabled="isLoading">
@@ -101,7 +107,7 @@
                                 This will only load the latest project list without saving
                             </p>
                         </div>
-                        <table x-show="assignments.length > 0" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <table x-show="assignments.length > 0 && !fetchingDailySchedules" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">SN.</th>
@@ -240,6 +246,7 @@
                 projectSearch: '',
                 employeeSearch: '',
                 isLoading: false,
+                fetchingDailySchedules: false,
 
                 init() {
                     // if url /daily-schedules?date=2025-02-21 has date then set selected date to that date
@@ -278,6 +285,9 @@
                 },
 
                 fetchDailySchedules() {
+                    this.dailySchedules = [];
+                    this.assignments = [];
+                    this.fetchingDailySchedules = true;
                     axios.get('/daily-schedules?date=' + this.selectedDate)
                         .then(response => {
                             this.dailySchedules = response.data;
@@ -286,6 +296,9 @@
                         })
                         .catch(error => {
                             console.error('Error fetching daily schedules:', error);
+                        })
+                        .finally(() => {
+                            this.fetchingDailySchedules = false;
                         });
                 },
 
