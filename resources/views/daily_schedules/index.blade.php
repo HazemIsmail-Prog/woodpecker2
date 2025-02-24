@@ -392,10 +392,14 @@
                 },
 
                 removeEmployeeFromAssignments(employeeId){
-                    // Remove employee from all assignments
-                    this.assignments.forEach(assignment => {
-                        assignment.employee_ids = assignment.employee_ids.filter(id => id !== employeeId);
-                    });
+                    // Remove employee from selected project assignments
+                    if(this.selectedProject){
+                        this.assignments.forEach(assignment => {
+                            if(assignment.project_id === this.selectedProject.id){
+                                assignment.employee_ids = assignment.employee_ids.filter(id => id !== employeeId);
+                            }
+                        });
+                    }
                 },
 
                 removeAssignment(index) {
