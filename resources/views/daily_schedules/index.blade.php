@@ -274,7 +274,8 @@
                     return this.availableProjects.filter(p => {
                         return p.name?.toLowerCase().includes(searchTerm) ||
                                p.location?.toLowerCase().includes(searchTerm) ||
-                               p.quotation_number?.toLowerCase().includes(searchTerm);
+                               p.quotation_number?.toLowerCase().includes(searchTerm) &&
+                               !this.assignments.some(a => a.project_id === p.id);
                     });
                 },
 
@@ -287,6 +288,7 @@
                 fetchDailySchedules() {
                     this.dailySchedules = [];
                     this.assignments = [];
+                    this.selectedProject = null;
                     this.fetchingDailySchedules = true;
                     axios.get('/daily-schedules?date=' + this.selectedDate)
                         .then(response => {
