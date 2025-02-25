@@ -366,6 +366,7 @@
                 const project = this.projects.find(p => p.id === schedule.project_id);
                 const projectValue = project.value;
                 if (!projectValue) return 0;
+                if(!schedule.start_date || !schedule.end_date) return 0;
                 if(new Date(schedule.start_date) > new Date()) return 0;
                 const totalDuration = project.schedules?.reduce((acc, curr) => acc + curr.duration, 0);
                 const valuePerDay = projectValue / totalDuration;
