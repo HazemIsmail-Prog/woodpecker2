@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ProjectsImport;
 use App\Exports\ProjectsExport;
+use App\Models\Employee;
 
 class ProjectController extends Controller
 {
@@ -21,7 +22,9 @@ class ProjectController extends Controller
             $status = $request->input('status', '');
             $search = $request->input('search', '');
             $schedulesFilter = $request->input('schedules_filter', '');
-            $projects = Project::with('schedules')
+            $projects = Project::query()
+            ->with('schedules')
+            ->with('dailySchedules')
             ->when($status, function ($query) use ($status) {
                 return $query->where('status', $status);
             })
@@ -43,7 +46,8 @@ class ProjectController extends Controller
             ->paginate($perPage);
             return response()->json($projects);
         }
-        return view('projects.index');
+        $employees = Employee::get(['id','type']);
+        return view('projects.index', compact('employees'));
     }
 
     public function store(Request $request)

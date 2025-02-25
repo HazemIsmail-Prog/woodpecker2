@@ -9,7 +9,9 @@
     </x-slot>
 
     <div class="p-4 bg-gray-100 dark:bg-gray-900" x-data="dailySchedules">
-        <div x-show="hasUnsavedChanges" 
+
+        <!-- Unsaved Changes Alert -->
+        <div x-cloak x-show="hasUnsavedChanges" 
              class="fixed bottom-4 right-4 bg-[#ac7909] text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-bounce"
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0 transform translate-y-2"
@@ -18,6 +20,7 @@
             <span>You have unsaved changes!</span>
         </div>
 
+        <!-- Date Selection -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div class="flex items-center gap-2">
                 <button @click="changeDate(-1)" class="bg-gray-600 hover:bg-gray-700 text-white p-2 rounded-md focus:ring-[#ac7909] focus:ring-2 focus:outline-none transition-colors">

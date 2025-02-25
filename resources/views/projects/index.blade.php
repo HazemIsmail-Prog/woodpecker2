@@ -188,6 +188,23 @@
                                                 <span class="flex-1" x-text="project.type_of_work"></span>
                                             </p>
                                         </template>
+                                        <!-- Manpower Summary -->
+                                        <div x-show="project.daily_schedules?.length > 0" class="mt-4 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                                                <i class="fas fa-users text-blue-400 mr-2"></i>
+                                                Manpower Summary
+                                            </h3>
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded">
+                                                    <span class="text-xs text-gray-600 dark:text-gray-400">Days</span>
+                                                    <span class="font-medium text-gray-800 dark:text-gray-200" x-text="project.daily_schedules?.length"></span>
+                                                </div>
+                                                <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded">
+                                                    <span class="text-xs text-gray-600 dark:text-gray-400">Team Leaders & Labours</span>
+                                                    <span class="font-medium text-gray-800 dark:text-gray-200" x-text="getSupervisorsCount(project) + getTechniciansCount(project)"></span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <!-- Right Section - Enhanced -->
@@ -216,6 +233,7 @@
                                                             <th class="px-4 py-2 text-start text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Start Date</th>
                                                             <th class="px-4 py-2 text-start text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">End Date</th>
                                                             <th class="px-4 py-2 text-start text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Duration</th>
+                                                            <th class="px-4 py-2 text-start text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Progress Value</th>
                                                             <th class="px-4 py-2 text-start text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                                                             <th class="px-4 py-2 text-start text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Notes</th>
                                                             <th class="px-4 py-2 text-start text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"></th>
@@ -227,6 +245,7 @@
                                                                 <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200" x-text="formatDate(schedule.start_date)"></td>
                                                                 <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200" x-text="formatDate(schedule.end_date)"></td>
                                                                 <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200" x-text="schedule.duration + ' days'"></td>
+                                                                <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200" x-text="getProgressValue(schedule)"></td>
                                                                 <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200" x-text="schedule.status"></td>
                                                                 <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200" x-text="schedule.notes"></td>
                                                                 <!-- delete schedule -->    
@@ -311,6 +330,7 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('projects', () => ({
             projects: [],
+            employees: @json($employees),
             currentProject: {},
             editingProject: false,
             search: '',
@@ -336,12 +356,39 @@
 
             init() {
                 this.fetchProjects();
-            },
-
-            init() {
                 window.addEventListener('scroll', () => {
                     this.isScrolled = window.scrollY > 100;
                 });
+                console.log(this.employees);
+            },
+
+            getProgressValue(schedule) {
+                const project = this.projects.find(p => p.id === schedule.project_id);
+                const projectValue = project.value;
+                if (!projectValue) return 0;
+                if(new Date(schedule.start_date) > new Date()) return 0;
+                const totalDuration = project.schedules?.reduce((acc, curr) => acc + curr.duration, 0);
+                const valuePerDay = projectValue / totalDuration;
+                const startDate = new Date(schedule.start_date);
+                const endDate = new Date();
+                const diffTime = Math.abs(endDate - startDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays > schedule.duration) return valuePerDay * schedule.duration;
+                return valuePerDay * diffDays;
+
+            },
+
+            getSupervisorsCount(project) {
+                // get total number of emplyee_id in the project from dailySchedules getting supervisor_id from this.employees
+                return project.daily_schedules?.reduce((acc, curr) => acc + curr.employee_ids.filter(id => this.employees.find(e => e.id === id && e.type === 'supervisor')?.id).length, 0);
+            },
+            getTechniciansCount(project) {
+                // get total number of emplyee_id in the project from dailySchedules getting supervisor_id from this.employees
+                return project.daily_schedules?.reduce((acc, curr) => acc + curr.employee_ids.filter(id => this.employees.find(e => e.id === id && e.type === 'technician')?.id).length, 0);
+            },
+            getEngineersCount(project) {
+                // get total number of emplyee_id in the project from dailySchedules getting supervisor_id from this.employees
+                return project.daily_schedules?.reduce((acc, curr) => acc + curr.employee_ids.filter(id => this.employees.find(e => e.id === id && e.type === 'engineer')?.id).length, 0);
             },
 
             resetAndFetch() {
