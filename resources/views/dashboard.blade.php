@@ -94,7 +94,7 @@
                 </div>
 
                 <!-- Monthly Progress Values -->
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg" x-data="progressWidget">
+                <!-- <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg" x-data="progressWidget">
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -154,7 +154,7 @@
                             </template>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Today's Schedule Summary -->
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg">
@@ -182,7 +182,6 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('progressWidget', () => ({
                 selectedMonth: '{{ $currentMonth }}',
-                projects: {{ Illuminate\Support\Js::from($projectsWithProgress) }},
                 
                 async changeMonth(direction) {
                     try {
