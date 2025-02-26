@@ -94,7 +94,7 @@
                 </div>
 
                 <!-- Monthly Progress Values -->
-                <!-- <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg" x-data="progressWidget">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg" x-data="progressWidget">
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -128,20 +128,14 @@
                                                 x-text="formatStatus(project.status)">
                                             </span>
                                         </div>
-                                        <div class="grid grid-cols-3 gap-4">
+                                        <div class="grid grid-cols-2 gap-4">
                                             <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded">
                                                 <div class="text-xs text-gray-500 dark:text-gray-400">Current Progress</div>
-                                                <div class="text-sm font-medium text-emerald-600 dark:text-emerald-400" x-text="formatCurrency(project.progress_value)"></div>
+                                                <div class="text-sm font-medium text-emerald-600 dark:text-emerald-400" x-text="formatCurrency(project.currentProgressValue)"></div>
                                             </div>
-                                            <template x-if="project.has_previous_progress">
-                                                <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                                                    <div class="text-xs text-gray-500 dark:text-gray-400">Previous Month</div>
-                                                    <div class="text-sm font-medium text-emerald-600 dark:text-emerald-400" x-text="formatCurrency(project.previous_progress_value)"></div>
-                                                </div>
-                                            </template>
                                             <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded">
                                                 <div class="text-xs text-gray-500 dark:text-gray-400">Total Value</div>
-                                                <div class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="formatCurrency(project.total_value)"></div>
+                                                <div class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="formatCurrency(project.value)"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -154,7 +148,7 @@
                             </template>
                         </div>
                     </div>
-                </div> -->
+                </div>
 
                 <!-- Today's Schedule Summary -->
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg">
@@ -179,59 +173,82 @@
     </div>
 
     <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('progressWidget', () => ({
-                selectedMonth: '{{ $currentMonth }}',
-                
-                async changeMonth(direction) {
-                    try {
-                        const [year, month] = this.selectedMonth.split('-').map(Number);
-                        let newYear = year;
-                        let newMonth = month;
+
+        function progressWidget() {
+            return {
+                selectedMonth: new Date().toISOString().split('T')[0].split('-').slice(0, 2).join('-'),
+                projects: [],
+                init() {
+                    this.getProgressValues();
+                },
+
+                getCurrentCompletedDays(project) {
+                    return project.schedules.reduce((total, schedule) => {
+                        let today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        let scheduleStartDate = new Date(schedule.start_date);
+                        scheduleStartDate.setHours(0, 0, 0, 0);
+                        let scheduleEndDate = new Date(schedule.end_date);
+                        scheduleEndDate.setHours(0, 0, 0, 0);
+                        let firstDayOfMonth = new Date(this.selectedMonth + '-01');
+                        firstDayOfMonth.setHours(0, 0, 0, 0);
+                        let lastDayOfMonth = new Date(this.selectedMonth + '-01');
+                        lastDayOfMonth.setMonth(lastDayOfMonth.getMonth() + 1);
+                        lastDayOfMonth.setDate(0);
                         
-                        if (direction === 'prev') {
-                            newMonth--;
-                            if (newMonth < 1) {
-                                newMonth = 12;
-                                newYear--;
-                            }
-                        } else {
-                            newMonth++;
-                            if (newMonth > 12) {
-                                newMonth = 1;
-                                newYear++;
+                        if(schedule.start_date && schedule.end_date){
+                            if(scheduleStartDate <= today){
+                                let startDate = 
+                                    scheduleStartDate < firstDayOfMonth 
+                                        ? firstDayOfMonth 
+                                        : scheduleStartDate < today 
+                                            ? scheduleStartDate 
+                                            : today;
+    
+                                let endDate = 
+                                    today < scheduleEndDate 
+                                        ? today
+                                        : scheduleEndDate < lastDayOfMonth 
+                                            ? scheduleEndDate 
+                                            : lastDayOfMonth;
+                                        
+                                // Set both dates to start of day to avoid timezone issues
+                                startDate.setHours(0, 0, 0, 0);
+                                endDate.setHours(0, 0, 0, 0);
+
+                                const diffTime = Math.abs(endDate - startDate);
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Add 1 to include both start and end dates
+                                return total + diffDays;
                             }
                         }
-                        
-                        const formattedMonth = newMonth.toString().padStart(2, '0');
-                        this.selectedMonth = `${newYear}-${formattedMonth}`;
-                        
-                        console.log('Fetching data for month:', this.selectedMonth);
-                        
-                        const response = await fetch(`/dashboard/progress?month=${this.selectedMonth}`, {
-                            headers: {
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            credentials: 'same-origin'
+                        return total;
+                    }, 0);
+                },
+
+                getProgressValues() {
+                    axios.get(`/dashboard/progress?month=${this.selectedMonth}`)
+                        .then(response => {
+                            this.projects = response.data.projects;
+                            this.projects.forEach(project => {
+                                project.valuePerDay = project.value / project.schedules.reduce((total, schedule) => total + schedule.duration, 0);
+                                project.currentCompletedDays = this.getCurrentCompletedDays(project);
+                                project.currentProgressValue = project.valuePerDay * project.currentCompletedDays;
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching progress values:', error);
                         });
-                        
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        
-                        const data = await response.json();
-                        console.log('API Response:', data);
-                        
-                        if (data && Array.isArray(data.projects)) {
-                            this.projects = data.projects;
-                            console.log('Updated projects:', this.projects);
-                        } else {
-                            console.error('Invalid data format received:', data);
-                        }
-                    } catch (error) {
-                        console.error('Error changing month:', error);
+                },
+
+                changeMonth(direction) {
+                    const date = new Date(this.selectedMonth + '-01'); // Add day to make valid date
+                    if (direction === 'prev') {
+                        date.setMonth(date.getMonth() - 1);
+                    } else {
+                        date.setMonth(date.getMonth() + 1);
                     }
+                    this.selectedMonth = date.toISOString().split('T')[0].split('-').slice(0, 2).join('-');
+                    this.getProgressValues();
                 },
                 
                 formatMonth(yearMonth) {
@@ -249,7 +266,8 @@
                 formatStatus(status) {
                     return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
                 }
-            }))
-        })
+            }
+        }
+
     </script>
 </x-app-layout>
