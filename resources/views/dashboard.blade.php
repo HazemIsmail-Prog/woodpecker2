@@ -112,7 +112,12 @@
                             </div>
                         </div>
                         
-                        <div class="space-y-4">
+                        <div class="space-y-4 overflow-y-auto max-h-[500px] no-scrollbar">
+                            <template x-if="isLoading">
+                                <div class="flex items-center justify-center">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
+                                </div>
+                            </template>
                             <template x-if="projects.length > 0">
                                 <template x-for="project in projects" :key="project.id">
                                     <div class="border-l-4 border-emerald-500 pl-3 py-2">
@@ -208,6 +213,8 @@
                 },
 
                 getProgressValues() {
+                    this.isLoading = true;
+                    this.projects = [];
                     axios.get(`/dashboard/progress?month=${this.selectedMonth}`)
                         .then(response => {
                             this.projects = response.data.projects;
@@ -219,6 +226,9 @@
                         })
                         .catch(error => {
                             console.error('Error fetching progress values:', error);
+                        })
+                        .finally(() => {
+                            this.isLoading = false;
                         });
                 },
 
@@ -252,4 +262,10 @@
         }
 
     </script>
+
+    <style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
 </x-app-layout>
