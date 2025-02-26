@@ -112,21 +112,28 @@
                     <div class="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col">
                         <!-- Month navigation - Fixed -->
                         <div class="flex justify-between items-center mb-4 flex-shrink-0">
-                            <button @click="previousMonth" 
-                                class="px-4 py-2 bg-gray-100 dark:bg-gray-900 hover:bg-[#ac7909] hover:text-white dark:hover:bg-[#ac7909] rounded-md flex items-center transition-colors">
-                                <svg class="w-4 h-4 mr-1 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                                </svg>
-                                <span class="mr-1">Previous</span>
-                            </button>
-                            <h2 class="text-xl font-bold" x-text="currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })"></h2>
-                            <button @click="nextMonth" 
-                                class="px-4 py-2 bg-gray-100 dark:bg-gray-900 hover:bg-[#ac7909] hover:text-white dark:hover:bg-[#ac7909] rounded-md flex items-center transition-colors">
-                                <span class="mr-1">Next</span>
-                                <svg class="w-4 h-4 ml-1 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
+                            <div class="flex items-center justify-between space-x-4">
+                                <div class="flex items-center space-x-2">
+                                    <button @click="previousMonth"
+                                        class="p-2 bg-gray-100 dark:bg-gray-900 hover:bg-[#ac7909] hover:text-white dark:hover:bg-[#ac7909] rounded-md flex items-center transition-colors">
+                                        <svg class="w-4 h-4 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+                                    <h2 class="text-xl font-bold" x-text="currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })"></h2>
+                                    <button @click="nextMonth"
+                                        class="p-2 bg-gray-100 dark:bg-gray-900 hover:bg-[#ac7909] hover:text-white dark:hover:bg-[#ac7909] rounded-md flex items-center transition-colors">
+                                        <svg class="w-4 h-4 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <a target="_blank" :href="`/schedules/export/pdf?month=${currentMonth.getMonth() + 1}&year=${currentMonth.getFullYear()}`"
+                               class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md flex items-center transition-colors">
+                                <i class="fas fa-file-pdf mr-2"></i>
+                                Export PDF
+                            </a>
                         </div>
                         
                         <!-- Calendar content -->

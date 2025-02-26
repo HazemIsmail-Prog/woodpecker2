@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Schedule;
 use App\Rules\NoScheduleOverlap;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ScheduleController extends Controller
 {
@@ -95,5 +96,38 @@ class ScheduleController extends Controller
         $schedule->delete();
 
         return response()->json(['message' => 'Schedule removed successfully']);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        try {
+            $month = $request->query('month');
+            $year = $request->query('year');
+
+            if (!$month || !$year) {
+                return response()->json(['error' => 'Month and year are required'], 400);
+            }
+
+            $schedules = Schedule::with('project')
+                ->whereMonth('start_date', $month)
+                ->whereYear('start_date', $year)
+                ->whereNotNull('start_date')
+                ->whereNotNull('end_date')
+                ->join('projects', 'schedules.project_id', '=', 'projects.id')
+                ->orderBy('start_date', 'asc')
+                ->get();
+
+            $monthYear = date('F Y', strtotime("$year-$month-01"));
+
+            $pdf = PDF::loadView('schedules.pdf', [
+                'schedules' => $schedules,
+                'month' => $monthYear
+            ]);
+
+            return $pdf->download("schedules-$year-$month.pdf");
+        } catch (\Exception $e) {
+            \Log::error('PDF Export Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to generate PDF. Please try again.'], 500);
+        }
     }
 } 
