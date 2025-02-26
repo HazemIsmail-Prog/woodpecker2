@@ -115,36 +115,17 @@
                         <div class="space-y-4">
                             <template x-if="projects.length > 0">
                                 <template x-for="project in projects" :key="project.id">
-                                    <div class="border-l-4 border-emerald-500 pl-4 py-3">
-                                        <div class="flex items-center justify-between mb-2">
+                                    <div class="border-l-4 border-emerald-500 pl-3 py-2">
+                                        <div class="flex items-center justify-between">
                                             <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="project.name"></h4>
-                                            <span class="px-2 py-1 text-xs rounded-full"
-                                                :class="{
-                                                    'bg-yellow-100 text-yellow-800': project.status === 'pending',
-                                                    'bg-blue-100 text-blue-800': project.status === 'in_progress',
-                                                    'bg-green-100 text-green-800': project.status === 'completed',
-                                                    'bg-red-100 text-red-800': project.status === 'cancelled'
-                                                }"
-                                                x-text="formatStatus(project.status)">
-                                            </span>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                                                <div class="text-xs text-gray-500 dark:text-gray-400">Current Progress</div>
-                                                <div class="text-sm font-medium text-emerald-600 dark:text-emerald-400" x-text="formatCurrency(project.currentProgressValue)"></div>
-                                            </div>
-                                            <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                                                <div class="text-xs text-gray-500 dark:text-gray-400">Total Value</div>
-                                                <div class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="formatCurrency(project.value)"></div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs text-green-500 dark:text-green-400" x-text="formatCurrency(project.currentProgressValue)"></span>
+                                                <span class="text-xs text-gray-400">/</span>
+                                                <span class="text-xs text-gray-600 dark:text-gray-400" x-text="formatCurrency(project.value)"></span>
                                             </div>
                                         </div>
                                     </div>
                                 </template>
-                            </template>
-                            <template x-if="projects.length === 0">
-                                <div class="text-center py-4">
-                                    <p class="text-gray-500 dark:text-gray-400">No projects with progress in this month</p>
-                                </div>
                             </template>
                         </div>
                     </div>
@@ -176,6 +157,7 @@
 
         function progressWidget() {
             return {
+                isLoading: true,
                 selectedMonth: new Date().toISOString().split('T')[0].split('-').slice(0, 2).join('-'),
                 projects: [],
                 init() {
