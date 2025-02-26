@@ -89,6 +89,7 @@
                     <td>
                         <div class="project-name">{{ $schedule->project->name }}</div>
                         <div class="project-details">{{ $schedule->project->quotation_number }}</div>
+                        <div class="project-details">{{ $schedule->project->phone }}</div>
                     </td>
                     <td class="date-column">{{ $schedule->project->delivery_date ? date('d-m-Y', strtotime($schedule->project->delivery_date)) : '-' }}</td>
                     <td class="date-column">{{ date('d-m-Y', strtotime($schedule->start_date)) }}</td>
