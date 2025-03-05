@@ -12,7 +12,7 @@
 
         <!-- Unsaved Changes Alert -->
         <div x-cloak x-show="hasUnsavedChanges" 
-             class="fixed bottom-4 right-4 bg-[#ac7909] text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-bounce"
+             class="fixed bottom-16 right-4 bg-[#ac7909] text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-bounce"
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0 transform translate-y-2"
              x-transition:enter-end="opacity-100 transform translate-y-0">
@@ -62,7 +62,7 @@
                     <p class="text-gray-600 dark:text-gray-400 mt-1" x-text="formatDate(selectedDate)"></p>
                 </div>
                 <button @click="$dispatch('open-modal', 'projects-modal')" 
-                    class="flex items-center bg-[#ac7909] hover:bg-[#8e6407] text-white px-4 py-2 rounded-md focus:ring-[#ac7909] focus:ring-2 focus:outline-none transition-colors">
+                    class="fixed right-4 bottom-4 flex items-center bg-[#ac7909] hover:bg-[#8e6407] text-white px-4 py-2 rounded-md focus:ring-[#ac7909] focus:ring-2 focus:outline-none transition-colors">
                     <i class="fas fa-plus mr-2"></i>
                     Add Project
                 </button>
@@ -377,7 +377,7 @@
 
                 isEmployeeSelected(employeeId) {
                     return this.assignments.some(assignment => 
-                        assignment.project_id === this.selectedProject.id && 
+                        
                         assignment.employee_ids.includes(employeeId)
                     );
                 },
